@@ -1,0 +1,12 @@
+services:
+       - type: web
+         name: easy-rdkit
+         env: python
+         plan: free
+         buildCommand: |
+           apt-get update && apt-get install -y libatlas-base-dev liblapack-dev
+           pip install -r requirements.txt
+         startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
+         envVars:
+           - key: PYTHONPATH
+             value: /app/.heroku/python/lib/python3.9/site-packages
