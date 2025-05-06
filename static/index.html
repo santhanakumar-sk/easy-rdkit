@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EASY RDKIT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1200px; /* Adjusted for laptop screens */
+            animation: fadeIn 1s ease-in-out;
+            position: relative;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        nav {
+            background: rgb(172, 8, 237);
+            padding: 10px 20px;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-around;
+        }
+        nav ul li {
+            display: inline;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1em;
+            padding: 10px 15px;
+            transition: transform 0.2s ease;
+        }
+        nav ul li a:hover {
+            transform: scale(1.1);
+        }
+        nav ul li a.active {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+        .section {
+            display: none;
+            padding: 15px;
+            position: relative;
+        }
+        .section.active {
+            display: block;
+            position: relative;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2em; /* Reduced for better fit */
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+        .input-section:hover {
+            transform: translateY(-5px);
+            background: #dfe6e9;
+        }
+        h3 {
+            color: #34495e;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            max-width: 500px; /* Adjusted for better fit */
+            padding: 8px;
+            margin: 8px 0;
+            border: 2px solid rgb(172, 8, 237);
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: border-color 0.3s ease;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: rgb(172, 8, 237);
+            outline: none;
+        }
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: rgb(172, 8, 237);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 0.9em;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background: rgb(142, 0, 207);
+            transform: scale(1.05);
+        }
+        #error, #loading {
+            color: rgb(172, 8, 237);
+            margin-top: 8px;
+            text-align: center;
+            font-weight: bold;
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            animation: slideUp 0.5s ease-out;
+            display: none;
+            min-width: 600px; /* Adjusted for better fit */
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+            color: #2c3e50;
+            white-space: nowrap;
+            font-size: 0.85em; /* Adjusted for better readability */
+        }
+        th {
+            background: rgb(172, 8, 237);
+            color: white;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #ecf0f1;
+        }
+        #download {
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+        #download button {
+            background: #2ecc71;
+        }
+        #download button:hover {
+            background: #27ae60;
+        }
+        .about-content, .contact-content, .help-content {
+            color: #34495e;
+            line-height: 1.6;
+            font-size: 0.9em;
+        }
+        .help-content h4 {
+            color: #2c3e50;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+        }
+        .help-content p, .help-content ul {
+            margin-bottom: 10px;
+        }
+        .help-content ul {
+            list-style-type: disc;
+            padding-left: 20px;
+        }
+        .help-content li {
+            margin-bottom: 5px;
+        }
+        @media (max-width: 768px) { /* Adjusted for mobile screens */
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 15px;
+                max-width: 100%;
+            }
+            h1 {
+                font-size: 1.5em;
+                letter-spacing: 1px;
+            }
+            nav ul {
+                flex-direction: column;
+                text-align: center;
+            }
+            nav ul li a {
+                padding: 8px 0;
+                font-size: 1em;
+            }
+            .input-section {
+                padding: 10px;
+            }
+            input[type="text"], input[type="file"] {
+                max-width: 100%;
+                padding: 6px;
+                font-size: 0.85em;
+            }
+            button {
+                padding: 6px 12px;
+                font-size: 0.85em;
+            }
+            table {
+                min-width: 100%;
+                font-size: 0.75em;
+            }
+            th, td {
+                padding: 6px;
+            }
+            .help-content, .about-content, .contact-content {
+                font-size: 0.85em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav>
+            <ul>
+                <li><a href="#" class="active" id="home-link" onclick="showSection('home')">Home</a></li>
+                <li><a href="#" id="about-link" onclick="showSection('about')">About Us</a></li>
+                <li><a href="#" id="contact-link" onclick="showSection('contact')">Contact</a></li>
+                <li><a href="#" id="help-link" onclick="showSection('help')">Help</a></li>
+            </ul>
+        </nav>
+
+        <div id="home" class="section active">
+            <h1>EASY RDKIT</h1>
+            
+            <div class="input-section">
+                <h3>Single SMILES Input</h3>
+                <input type="text" id="smilesInput" placeholder="Enter SMILES (e.g., c1ccccc1O)">
+                <button id="processSingleBtn" onclick="processSingle()">Calculate Descriptors</button>
+            </div>
+            
+            <div class="input-section">
+                <h3>Batch File Upload (.txt or .csv)</h3>
+                <input type="file" id="fileInput" accept=".txt,.csv">
+                <button id="processFileBtn" onclick="processFile()">Process File</button>
+            </div>
+            
+            <div id="error"></div>
+            <div id="loading" style="display: none;">Loading...</div>
+            
+            <div class="table-container">
+                <table id="resultsTable">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            
+            <div id="download">
+                <button onclick="downloadCSV()">Download CSV</button>
+            </div>
+        </div>
+
+        <div id="about" class="section">
+            <h1>About Us</h1>
+            <div class="about-content">
+                <p>Welcome to the SMILES Descriptors Calculator, a powerful tool designed to compute molecular descriptors for SMILES strings using the RDKit library. This tool is ideal for chemists and researchers who need quick and accurate descriptor calculations for single molecules or batches of compounds.</p>
+                <p>Our mission is to provide an intuitive, user-friendly interface to support molecular analysis and cheminformatics research. Built with Flask and enhanced with dynamic visuals, this tool combines functionality with an engaging experience.</p>
+                <p>IUPAC names are fetched using the PubChem API. If a compound name is not provided, a synonym from PubChem is used.</p>
+            </div>
+        </div>
+
+        <div id="contact" class="section">
+            <h1>Contact</h1>
+            <div class="contact-content">
+                <p>Name: Santhanakumar P</p>
+                <p>Email: santhanakumarsk10@gmail.com</p>
+                <p>Phone: +91 6369750067</p>
+                <p>Location: Chennai, India</p>
+                <p>LinkedIn ID: linkedin.com/in/santhana-kumar-p-835ab01ba</p>
+            </div>
+        </div>
+
+        <div id="help" class="section">
+            <h1>Help</h1>
+            <div class="help-content">
+                <h4>Introduction</h4>
+                <p>EASY RDKIT is a tool designed to calculate molecular descriptors from SMILES strings using the RDKit library. It supports both single SMILES input and batch processing via file upload, making it useful for chemists and researchers in cheminformatics.</p>
+
+                <h4>How to Use EASY RDKIT</h4>
+                <p>Follow the steps below to compute molecular descriptors:</p>
+                <ul>
+                    <li><strong>Single SMILES Input:</strong>
+                        <ul>
+                            <li>Navigate to the "Home" tab.</li>
+                            <li>In the "Single SMILES Input" section, enter a valid SMILES string (e.g., c1ccccc1O for phenol).</li>
+                            <li>Click the "Calculate Descriptors" button.</li>
+                            <li>Wait for the results to display in a table below the input section.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Batch File Upload:</strong>
+                        <ul>
+                            <li>Navigate to the "Home" tab.</li>
+                            <li>In the "Batch File Upload (.txt or .csv)" section, click to select a file.</li>
+                            <li>Ensure the file is a .txt or .csv containing SMILES strings (one per line for .txt, or one per row in the first column for .csv).</li>
+                            <li>Click the "Process File" button.</li>
+                            <li>Wait for the results to display in a table below the input section.</li>
+                        </ul>
+                    </li>
+                    <li><strong>Downloading Results:</strong>
+                        <ul>
+                            <li>After processing, a "Download CSV" button will appear below the results table.</li>
+                            <li>Click the button to download the descriptors in CSV format.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4>File Format Requirements</h4>
+                <p>For batch processing, ensure your file meets the following criteria:</p>
+                <ul>
+                    <li><strong>.txt Files:</strong> Each line should contain a single SMILES string (e.g., c1ccccc1O).</li>
+                    <li><strong>.csv Files:</strong> The first column should contain SMILES strings, with no header (e.g., c1ccccc1O in the first cell of each row).</li>
+                </ul>
+
+                <h4>Troubleshooting</h4>
+                <p>If you encounter issues, check the following:</p>
+                <ul>
+                    <li>Ensure the SMILES string is valid. Invalid SMILES will result in an error message.</li>
+                    <li>Verify that your file is in the correct format (.txt or .csv) and contains valid SMILES strings.</li>
+                    <li>If the tool is unresponsive, refresh the page and try again.</li>
+                </ul>
+
+                <h4>Additional Notes</h4>
+                <p>The tool fetches IUPAC names using the PubChem API. If a name is not found, it may display "Not available" or use a synonym from PubChem. For further assistance, refer to the "Contact" tab.</p>
+            </div>
+        </div>
+
+        <script>
+            const BACKEND_URL = '';
+
+            const COLUMN_ORDER = [
+                'SMILES',
+                'Compound_Name',
+                'IUPAC_Name',
+                'fr_C_O_noCOO', 'MaxEStateIndex', 'Chi4v', 'fr_Ar_COO', 'Chi4n', 'SMR_VSA4', 'fr_urea',
+                'fr_para_hydroxylation', 'fr_barbitur', 'fr_Ar_NH', 'fr_halogen', 'fr_dihydropyridine',
+                'fr_priamide', 'Chi0n', 'fr_Al_COO', 'fr_guanido', 'MinPartialCharge', 'fr_furan',
+                'fr_morpholine', 'fr_term_acetylene', 'SlogP_VSA6', 'fr_amidine', 'fr_benzodiazepine',
+                'ExactMolWt', 'SlogP_VSA1', 'MolWt', 'NumHDonors', 'fr_hdrzine', 'NumAromaticRings',
+                'fr_quatN', 'NumSaturatedHeterocycles', 'NumAliphaticHeterocycles', 'fr_benzene',
+                'fr_phos_acid', 'fr_sulfone', 'VSA_EState10', 'fr_aniline', 'fr_N_O', 'fr_sulfonamd',
+                'fr_thiazole', 'TPSA', 'fr_piperzine', 'SMR_VSA10', 'PEOE_VSA13', 'PEOE_VSA12',
+                'PEOE_VSA11', 'PEOE_VSA10', 'BalabanJ', 'fr_lactone', 'Chi3v', 'Chi2n', 'EState_VSA10',
+                'EState_VSA11', 'HeavyAtomMolWt', 'Chi0', 'Chi1', 'NumAliphaticRings', 'MolLogP',
+                'fr_nitro', 'fr_Al_OH', 'fr_azo', 'NumAliphaticCarbocycles', 'fr_C_O', 'fr_ether',
+                'fr_phenol_noOrthoHbond', 'RingCount', 'fr_alkyl_halide', 'NumValenceElectrons',
+                'fr_aryl_methyl', 'MinEStateIndex', 'HallKierAlpha', 'fr_C_S', 'fr_thiocyan', 'fr_NH0',
+                'VSA_EState4', 'fr_nitroso', 'VSA_EState6', 'VSA_EState7', 'VSA_EState1', 'VSA_EState2',
+                'VSA_EState3', 'fr_HOCCN', 'BertzCT', 'SlogP_VSA12', 'VSA_EState9', 'SlogP_VSA10',
+                'SlogP_VSA11', 'fr_COO', 'NHOHCount', 'fr_unbrch_alkane', 'NumSaturatedRings',
+                'MaxPartialCharge', 'fr_methoxy', 'fr_amide', 'SlogP_VSA8', 'SlogP_VSA9', 'SlogP_VSA4',
+                'SlogP_VSA5', 'NumAromaticCarbocycles', 'SlogP_VSA7', 'fr_Imine', 'SlogP_VSA2',
+                'SlogP_VSA3', 'fr_phos_ester', 'fr_NH2', 'MinAbsPartialCharge', 'SMR_VSA3',
+                'NumHeteroatoms', 'fr_NH1', 'fr_ketone_Topliss', 'fr_SH', 'LabuteASA', 'fr_thiophene',
+                'Chi3n', 'fr_imidazole', 'fr_nitrile', 'SMR_VSA2', 'SMR_VSA1', 'SMR_VSA7', 'SMR_VSA6',
+                'EState_VSA8', 'EState_VSA9', 'EState_VSA6', 'fr_nitro_arom', 'SMR_VSA9', 'EState_VSA5',
+                'EState_VSA2', 'fr_Ndealkylation2', 'fr_Ndealkylation1', 'EState_VSA1', 'PEOE_VSA14',
+                'Kappa3', 'Ipc', 'fr_diazo', 'Kappa2', 'fr_Ar_N', 'fr_Nhpyrrole', 'EState_VSA7',
+                'MolMR', 'VSA_EState5', 'EState_VSA4', 'fr_COO2', 'fr_prisulfonamd', 'fr_oxime',
+                'SMR_VSA8', 'fr_isocyan', 'EState_VSA3', 'Chi2v', 'HeavyAtomCount', 'fr_aldehyde',
+                'SMR_VSA5', 'NumHAcceptors', 'fr_lactam', 'fr_allylic_oxid', 'VSA_EState8', 'fr_oxazole',
+                'fr_piperdine', 'fr_Ar_OH', 'NumRadicalElectrons', 'fr_sulfide', 'fr_alkyl_carbamate',
+                'NOCount', 'Chi1n', 'MaxAbsEStateIndex', 'PEOE_VSA7', 'PEOE_VSA6', 'PEOE_VSA5',
+                'PEOE_VSA4', 'PEOE_VSA3', 'PEOE_VSA2', 'PEOE_VSA1', 'NumSaturatedCarbocycles',
+                'fr_imide', 'FractionCSP3', 'Chi1v', 'fr_Al_OH_noTert', 'fr_epoxide', 'fr_hdrzone',
+                'fr_isothiocyan', 'NumAromaticHeterocycles', 'fr_bicyclic', 'Kappa1', 'MinAbsEStateIndex',
+                'fr_phenol', 'fr_ester', 'PEOE_VSA9', 'fr_azide', 'PEOE_VSA8', 'fr_pyridine',
+                'fr_tetrazole', 'fr_ketone', 'fr_nitro_arom_nonortho', 'Chi0v', 'fr_ArN',
+                'NumRotatableBonds', 'MaxAbsPartialCharge'
+            ];
+
+            function showSection(sectionId) {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+                
+                document.querySelectorAll('nav a').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.getElementById(sectionId + '-link').classList.add('active');
+            }
+
+            function clearResults() {
+                document.getElementById('error').innerText = '';
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultsTable').style.display = 'none';
+                document.getElementById('download').style.display = 'none';
+                document.getElementById('tableHead').innerHTML = '';
+                document.getElementById('tableBody').innerHTML = '';
+            }
+
+            async function processSingle() {
+                clearResults();
+                const smiles = document.getElementById('smilesInput').value.trim();
+                const processBtn = document.getElementById('processSingleBtn');
+                if (!smiles) {
+                    document.getElementById('error').innerText = 'Please enter a SMILES string';
+                    return;
+                }
+
+                processBtn.disabled = true;
+                document.getElementById('loading').style.display = 'block';
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/process_single`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ smiles })
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        document.getElementById('error').innerText = data.error;
+                    } else {
+                        displayResults(data);
+                    }
+                } catch (error) {
+                    document.getElementById('error').innerText = 'Error processing SMILES';
+                    console.error(error);
+                } finally {
+                    processBtn.disabled = false;
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+
+            async function processFile() {
+                clearResults();
+                const fileInput = document.getElementById('fileInput');
+                const processBtn = document.getElementById('processFileBtn');
+                if (!fileInput.files.length) {
+                    document.getElementById('error').innerText = 'Please select a file';
+                    return;
+                }
+
+                processBtn.disabled = true;
+                document.getElementById('loading').style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                try {
+                    const response = await fetch(`${BACKEND_URL}/process`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (data.error) {
+                        document.getElementById('error').innerText = data.error;
+                    } else {
+                        displayResults(data);
+                    }
+                } catch (error) {
+                    document.getElementById('error').innerText = 'Error processing file';
+                    console.error(error);
+                } finally {
+                    processBtn.disabled = false;
+                    document.getElementById('loading').style.display = 'none';
+                }
+            }
+
+            function displayResults(data) {
+                const tableHead = document.getElementById('tableHead');
+                const tableBody = document.getElementById('tableBody');
+                const table = document.getElementById('resultsTable');
+                const downloadBtn = document.getElementById('download');
+
+                if (data.descriptors.length === 0) {
+                    document.getElementById('error').innerText = 'No valid descriptors found';
+                    return;
+                }
+
+                const headerRow = document.createElement('tr');
+                COLUMN_ORDER.forEach(header => {
+                    const th = document.createElement('th');
+                    th.innerText = header;
+                    headerRow.appendChild(th);
+                });
+                tableHead.appendChild(headerRow);
+
+                data.descriptors.forEach(desc => {
+                    const row = document.createElement('tr');
+                    COLUMN_ORDER.forEach(header => {
+                        const td = document.createElement('td');
+                        td.innerText = desc[header] !== undefined ? desc[header] : 'N/A';
+                        row.appendChild(td);
+                    });
+                    tableBody.appendChild(row);
+                });
+
+                table.style.display = 'table';
+                downloadBtn.style.display = 'block';
+            }
+
+            async function downloadCSV() {
+                window.location.href = `${BACKEND_URL}/download`;
+            }
+        </script>
+    </div>
+</body>
+</html>

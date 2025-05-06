@@ -1,0 +1,4 @@
+cd "D:/d/rdkit files/Easy_rdkit"
+venv\Scripts\activate
+python app.py
+
